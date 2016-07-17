@@ -21,13 +21,14 @@ var logger = new (winston.Logger)({
 
 var url = '';
 
+
 for(a=118 ; a<119 ; a++) {
 	for(b=97 ; b<123 ; b++) {
 		for(c=97 ; c<123 ; c++) {
 			for(d=97 ; d<123 ; d++) {
-				url = 'http://002' + String.fromCharCode(a,b,c,d) + '.nwsvr.com';
+				url = 'http://005' + String.fromCharCode(a,b,c,d) + '.nwsvr1.com';
 				getLink(url);
-                sleep.usleep(500);
+                sleep.usleep(5000);
 			}
 		}
 	}

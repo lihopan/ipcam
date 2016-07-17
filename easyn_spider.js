@@ -3,6 +3,7 @@ var winston = require('winston');
 var sleep = require('sleep');
 var satelize = require('satelize');
 
+/*
 var logger = new (winston.Logger)({
   transports: [
   	new (winston.transports.Console)(),
@@ -18,10 +19,11 @@ var logger = new (winston.Logger)({
     })
   ]
 });
+*/
 
 var url = '';
 
-for(a=116 ; a<117 ; a++) {
+for(a=114 ; a<115 ; a++) {
 	for(b=97 ; b<123 ; b++) {
 		for(c=97 ; c<123 ; c++) {
 			for(d=97 ; d<123 ; d++) {
@@ -71,7 +73,7 @@ function login(url,link) {
 
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-        logger.log('info','%s',	url);
+        console.log(url);
     }
 		
     });	
