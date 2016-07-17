@@ -6,6 +6,7 @@
     	"request": "~2.72.0",         
    		"winston": "~2.2.0",
 		"sleep": "~3.0.1",
-        "satelize": "0.2.0"
+        "satelize": "~0.2.0",
+		"event-stream": "~3.3.3"
 	}
 }
