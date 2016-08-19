@@ -68,7 +68,7 @@ function checkCountry(url,link) {
 
 function login(url,link) {
 	link = 'http://admin@' + link.substr(7) + '/check_user.cgi';
-
+    console.log(link);
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {
         logger.log('info','%s',	url);
