@@ -9,4 +9,11 @@
         "satelize": "~0.2.0",
 		"event-stream": "~3.3.3"
 	}
+	"engines":{
+		"node": "6.2.1",
+		"npm": "3.9.3"
+	}
+	"scripts":{
+		"start": "wansview_pw_sprider.js",
+	}
 }
