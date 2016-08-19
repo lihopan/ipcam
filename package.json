@@ -14,6 +14,6 @@
 		"npm": "3.9.3"
 	},
 	"scripts":{
-		"start": "node wansview_pw_sprider.js"
+		"start": "node wansview_sprider.js"
 	}
 }
