@@ -7,13 +7,7 @@
    		"winston": "~2.2.0",
 		"sleep": "~3.0.1",
         "satelize": "~0.2.0",
-		"event-stream": "~3.3.3"
-	},
-	"engines":{
-		"node": "6.2.1",
-		"npm": "3.9.3"
-	},
-	"scripts":{
-		"start": "node wansview_sprider.js"
+		"event-stream": "~3.3.3",
+		"rtsp_stream" : "~1.0.0"
 	}
 }
