@@ -3,6 +3,10 @@ var net = require('net');
 var client = new net.Socket();
 var url = "rtsp://1.36.35.222/11";
 
+
+
+
+
 console.log('Connecting');
 client.connect(554,'1.36.35.222',function(){
 	console.log('Connected');
@@ -28,6 +32,7 @@ client.on('data',function(data){
 });
 
 function options() {
+
     var req = "OPTIONS "+url+" RTSP/1.0\r\n"
                 +"CSeq: 1\r\n";
     client.write(req);
@@ -57,7 +62,7 @@ function describe2(data) {
 	console.log("HA1 : "+ha1);
 	console.log("HA2 : "+ha2);
 	console.log("response : "+response);
-	var req = "DESCRIBE "+url+" RTSP/1.0\r\n"	
+	var req2 = "DESCRIBE "+url+" RTSP/1.0\r\n"	
 			+"CSeq: 3\r\n"
 			+"User-Agent: Videos/3.18.1\r\n"
 			+"Accept: application/sdp\r\n"
@@ -67,7 +72,6 @@ function describe2(data) {
 			+"\", url=\""+url
 			+"\", response=\""+response+"\"\r\n"
 			+"\r\n";
-	console.log(req);
-	client.write(req);
+	client.write(req2);
 }
 
