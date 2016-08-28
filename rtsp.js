@@ -3,33 +3,31 @@ var net = require('net');
 var client = new net.Socket();
 var url = "rtsp://1.36.35.222/11";
 
-
-
-
-
 console.log('Connecting');
-client.connect(554,'1.36.35.222',function(){
-	console.log('Connected');
-	options();	
-});
+connect(1,'');
 
 client.on('data',function(data){
 	console.log('Data: ' + data);
-
+	client.destroy();
 	if(data.indexOf("CSeq: 1") > -1){
-		describe1();
+		connect(2,data);
 	} else if(data.indexOf("CSeq: 2") > -1){
-		describe2(data);
+		connect(3,data);
 	} else if(data.indexOf("CSeq: 3") > -1){
-		if(data.indexOf("200 OK") > -1) {
-			client.destroy();
-		} else {
-			client.destroy();
-		}	 
-	} else {
-		client.destroy();
 	}
 });
+
+function connect(cseq,data) {
+	client.connect(554,'1.36.35.222',function(){
+		if(cseq === 1) {
+			options();
+		} else if(cseq === 2) {
+			describe1();
+		} else if(cseq === 3) {
+			describe2(data);
+		}
+	});
+}
 
 function options() {
 
