@@ -1,33 +1,25 @@
 var mb5 = require('js-md5');
+
 var net = require('net');
 var client = new net.Socket();
 var url = "rtsp://1.36.35.222/11";
 
 console.log('Connecting');
-connect(1,'');
 
 client.on('data',function(data){
 	console.log('Data: ' + data);
-	client.destroy();
 	if(data.indexOf("CSeq: 1") > -1){
-		connect(2,data);
+		describe1();
 	} else if(data.indexOf("CSeq: 2") > -1){
-		connect(3,data);
+		describe2(data);
 	} else if(data.indexOf("CSeq: 3") > -1){
+		client.destroy();
 	}
 });
 
-function connect(cseq,data) {
-	client.connect(554,'1.36.35.222',function(){
-		if(cseq === 1) {
-			options();
-		} else if(cseq === 2) {
-			describe1();
-		} else if(cseq === 3) {
-			describe2(data);
-		}
-	});
-}
+client.connect(554,'1.36.35.222',function(){
+		options();
+});
 
 function options() {
 
@@ -70,6 +62,7 @@ function describe2(data) {
 			+"\", url=\""+url
 			+"\", response=\""+response+"\"\r\n"
 			+"\r\n";
+	console.log(req2);
 	client.write(req2);
 }
 
