@@ -1,6 +1,6 @@
 <?php
 error_reporting(E_ERROR);
-
+set_time_limit(0);
 echo "TCP/IP Connection\n";
 
 /* Get the port for the rtsp service. */
