@@ -24,14 +24,14 @@ client.connect(554,'1.36.35.222',function(){
 function options() {
 
     var req = "OPTIONS "+url+" RTSP/1.0\r\n"
-                +"CSeq: 1\r\n";
+                +"CSeq: 1\r\n\r\n";
     client.write(req);
 } 
 
 function describe1() {
 	
     var req = "DESCRIBE "+url+" RTSP/1.0\r\n"
-                +"CSeq: 2\r\n";
+                +"CSeq: 2\r\n\r\n";
 	client.write(req);
 }
 
