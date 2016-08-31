@@ -59,7 +59,7 @@ function describe2(data) {
 			+"Authorization: Digest username=\"admin\","
 			+" realm=\""+realm
 			+"\", nonce=\""+nonce
-			+"\", url=\""+url
+			+"\", uri=\""+url
 			+"\", response=\""+response+"\"\r\n"
 			+"\r\n";
 	console.log(req2);
