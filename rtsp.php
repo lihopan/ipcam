@@ -26,7 +26,13 @@ if ($result === false) {
 }
 
 $in = "OPTIONS ".$url." RTSP/1.0\r\n";
-$in .= "CSeq: 1\r\n\r\n";
+$in .= "CSeq: 1\r\n";
+$in .= "User-Agent: GStreamer/1.6.2\r\n";
+$in .= "ClientChallenge: 9e26d33f2984236010ef6253fb1887f7\r\n";
+$in .= "CompanyID: KnKV4M4I/B2FjJ1TToLycw==\r\n";
+$in .= "GUID: 00000000-0000-0000-0000-000000000000\r\n";
+$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
+
 $out = '';
 
 echo "Sending RTSP HEAD request...";
@@ -38,7 +44,10 @@ $out = socket_read($socket, 2048);
 echo $out;
 
 $in = "DESCRIBE ".$url." RTSP/1.0\r\n";
-$in .= "CSeq: 2\r\n\r\n";
+$in .= "CSeq: 2\r\n";
+$in .= "User-Agent: GStreamer/1.6.2\r\n";
+$in .= "Accept: application/sdp\r\n";
+$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
 $out = '';
 
 echo "Sending RTSP HEAD request...";
@@ -64,11 +73,15 @@ echo "response : ".$response."\n";
 
 $in = "DESCRIBE ".$url." RTSP/1.0\r\n";
 $in .= "CSeq: 3\r\n";
+$in .= "User-Agent: GStreamer/1.6.2\r\n";
+$in .= "Accept: application/sdp\r\n";
 $in .= "Authorization: Digest username=\"admin\", ";
 $in .= "realm=\"".$realm."\", ";
 $in .= "nonce=\"".$nonce."\", ";
 $in .= "url=\"".$url."\", ";
-$in .= "response=\"".$response."\"\r\n\r\n";
+$in .= "response=\"".$response."\"\r\n";
+$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
+
 echo "Write $in";
 
 echo "Sending RTSP HEAD request...";
