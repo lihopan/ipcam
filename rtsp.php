@@ -1,25 +1,11 @@
 <?php
 error_reporting(E_ERROR);
 set_time_limit(0);
-echo "TCP/IP Connection\n";
+//echo "TCP/IP Connection\n";
 
-/* Get the port for the rtsp service. */
-$service_port = getservbyname('rtsp', 'tcp');
-
-
-/* Create a TCP/IP socket. */
-$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-if ($socket === false) {
-    echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
-} else {
-    echo "OK.\n";
-}
-
-socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 1, 'usec' => 0));
-socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => 1, 'usec' => 0));
-
-//$address = '1.36.35.222';
+//$address = "1.36.35.222";
 //checking($address);
+
 
 for($a=1;$a<=1;$a++){
 for($b=36;$b<=36;$b++){
@@ -29,23 +15,38 @@ for($d=0;$d<=255;$d++){
 	checking($address);
 }}}}
 
+
+for($i=0;$i<20;$i++){sleep(1);}
+
 function checking($address) {
 
-global $service_port, $socket;
+/* Get the port for the rtsp service. */
+$service_port = getservbyname('rtsp', 'tcp');
+
+/* Create a TCP/IP socket. */
+$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+if ($socket === false) {
+    //echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
+    unset($socket);    
+    return false;
+} 
+
+//socket_set_nonblock($socket);
+socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 1, 'usec' => 0));
+socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => 1, 'usec' => 0));
 
 $url = 'rtsp://'.$address.'/11';
 
-//echo "Attempting to connect to '$address' on port '$service_port'...";
+//echo "Attempting to connect to '$address' on port '$service_port'...\r\n";
 try{
 	$result = socket_connect($socket, $address, $service_port);
 } catch(Exception $e) {
+    unset($socket);
 	return false;
 }
 if ($result === false) {
-    //echo "socket_connect() failed.\nReason: ($result) " . socket_strerror(socket_last_error($socket)) . "\n";
+    unset($socket);
 	return false;
-} else {
-    //echo "OK.\n";
 }
 
 $in = "OPTIONS ".$url." RTSP/1.0\r\n";
@@ -122,5 +123,7 @@ if(strpos($out,"200 OK")>0) {
 socket_close($socket);
 //echo "OK.\n\n";
 
+unset($socket);
 }
+
 ?>
