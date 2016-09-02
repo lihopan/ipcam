@@ -3,12 +3,8 @@ error_reporting(E_ERROR);
 set_time_limit(0);
 //echo "TCP/IP Connection\n";
 
-//$address = "1.36.35.222";
-//checking($address);
-
-
-for($a=1;$a<=1;$a++){
-for($b=36;$b<=36;$b++){
+for($a=42;$a<=98;$a++){
+for($b=98;$b<=98;$b++){
 for($c=0;$c<=255;$c++){
 for($d=0;$d<=255;$d++){
 	$address = "$a.$b.$c.$d";
@@ -16,7 +12,6 @@ for($d=0;$d<=255;$d++){
 }}}}
 
 
-for($i=0;$i<20;$i++){sleep(1);}
 
 function checking($address) {
 
