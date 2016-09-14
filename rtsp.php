@@ -3,8 +3,8 @@ error_reporting(E_ERROR);
 set_time_limit(0);
 //echo "TCP/IP Connection\n";
 
-for($a=42;$a<=98;$a++){
-for($b=98;$b<=98;$b++){
+for($a=42;$a<=42;$a++){
+for($b=60;$b<=61;$b++){
 for($c=0;$c<=255;$c++){
 for($d=0;$d<=255;$d++){
 	$address = "$a.$b.$c.$d";
