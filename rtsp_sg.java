@@ -20,7 +20,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import static com.mongodb.client.model.Filters.*;
 
-public class rtsp {
+public class rtsp_sg {
 
 	public static void main(String[] args) {
 
@@ -31,10 +31,10 @@ public class rtsp {
 		MongoDatabase database = mongoClient.getDatabase("ipcam");
 
 		// get a handle to the "capture_lsit" collection
-		MongoCollection<Document> collection = database.getCollection("capture_list_all");
+		MongoCollection<Document> collection = database.getCollection("capture_list_sg");
 
         // create thread pool
-        Integer threadSize = 80;
+        Integer threadSize = 20;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -54,13 +54,13 @@ public class rtsp {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("/var/www/html/ipcam/pic/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /var/www/html/ipcam/pic/all/" + token + " created");
+	    if ((new File("/var/www/html/ipcam/pic/sg/" + token)).mkdir()) {
+	      System.out.println("Directory: /var/www/html/ipcam/pic/sg/" + token + " created");
 	    }   
 
         // load URL
         try {
-	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=HONG+KONG%2CSINGAPORE%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
+	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=SINGAPORE&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
 			URLConnection spoof = url.openConnection();
 
 			// spoof the connection so we look like a web browser
@@ -86,7 +86,7 @@ public class rtsp {
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
-				System.out.println(startAddr + " " + endAddr);
+				//System.out.println(startAddr + " " + endAddr);
 
 				// Convert from an IPv4 address to an integer
 				startInt = ipToLong(startAddr);
@@ -220,7 +220,7 @@ public class rtsp {
 
 	public static void housekeepFolder(String token) {
 
-		File file = new File("/var/www/html/ipcam/pic/all");
+		File file = new File("/var/www/html/ipcam/pic/sg");
 		String[] directories = file.list(new FilenameFilter() {
 		  @Override
 		  public boolean accept(File current, String name) {
@@ -231,7 +231,7 @@ public class rtsp {
 		File dir;
 		for(int i = 0; i < directories.length; i++) {
 			if(!directories[i].equals(token)) {
-				dir = new File("/var/www/html/ipcam/pic/all/" + directories[i]);
+				dir = new File("/var/www/html/ipcam/pic/sg/" + directories[i]);
 				if (deleteFolder(dir)) {
 					System.out.println(directories[i] + " directory is deleted.");
 				} else {
@@ -276,43 +276,21 @@ class rtspTask implements Callable<String> {
 		//Process p;
 		//StringBuffer output = new StringBuffer();
 
-		String user, pw, req, link, file, rtspCmd, result;
-
+		String user, pw, req, link, file, rtspCmd;
 		rtspCmd = "";
 		user = "admin";
 		pw = "admin";
-		req = "2";
-		file = "/var/www/html/ipcam/pic/all/"+token+"/"+ip+".jpeg";
+		req = "11";
+		file = "/var/www/html/ipcam/pic/sg/"+token+"/"+ip+".jpeg";
+
+		//ip = "183.179.242.225";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
-		
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
-			+"/var/www/html/ipcam/pic/all/"+ip+".jpeg 2>&1";
+			+"/var/www/html/ipcam/pic/sg/"+ip+".jpeg 2>&1";
 
-		result = captureCmd(link, file);
-
-		if(result.indexOf("401 Unauthorized") > -1) {
-			user = "user";
-			pw = "user";
-			link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
-			result = captureCmd(link, file);
-		}
-
-		/*
-		if(result.indexOf("400 Bad Request") > -1) {
-			user = "admin";
-			pw = "12345";
-			req = "MediaInput/h264";
-			link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
-			result = captureCmd(link, file);
-		}
-		*/
-
-		return ip + "~" + link + "~" + result;
-	}
-
-	public String captureCmd(String link, String file) throws Exception {
+		//System.out.println(rtspCmd);
 
 		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","-vframes","1","-y",file).redirectErrorStream(true).start();
 		StringBuilder strBuild = new StringBuilder();
@@ -322,14 +300,14 @@ class rtspTask implements Callable<String> {
 		        strBuild.append(line + System.lineSeparator());
 		    }
 		    processDuration.waitFor();
-		}		
+		}
 
-		return checkResult(strBuild.toString());
+		return ip + "~" + link + "~" + checkResult(strBuild.toString());
 	}
 
 	public String checkResult(String output) {
 		String result = "";
-		
+		//System.out.println(output);
 		if(output.indexOf("Connection timed out") > -1) {
 			result = "Connection timeout";		//Host offline	
 		} else if(output.indexOf("Connection refused") > -1) {
@@ -343,7 +321,6 @@ class rtspTask implements Callable<String> {
 		} else if(output.indexOf("Output #0, image2, to") > -1) {
 			result = "Success"; 					//Connect success
 		}
-		
 		return result;
 	}
 
