@@ -29,9 +29,10 @@ public class rtsp_nodb {
 		SimpleDateFormat tokenFormat;
 		String token;
 
-		Boolean running = false;
+		Boolean running = true;
 
 		while(running) {
+
 		// create token
 		tokenDate = new Date();
 		tokenFormat = new SimpleDateFormat("yyyyMMddHHmmss");
@@ -125,9 +126,12 @@ public class rtsp_nodb {
 			}
         } catch (Exception e) {
         	System.out.println(e.getMessage());
-        }
+		}
+
+		running = false;
 
 		}
+
 		executor.shutdown();
 
 
