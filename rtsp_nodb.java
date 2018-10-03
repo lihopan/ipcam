@@ -39,10 +39,10 @@ public class rtsp_nodb {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("~/Downloads/ipcam/all/" + token)).mkdir()) {
-	      System.out.println("Directory: ~/Downloads/all/" + token + " created");
+	    if ((new File("/home/frank/Downloads/ipcam/all/" + token)).mkdir()) {
+	      System.out.println("Directory: /home/frank/Downloads/ipcam/all/" + token + " created");
 	    } else {
-			System.out.println("Fail to create directory: ~/Downloads/all/" + token + "");
+			System.out.println("Fail to create directory: /home/frank/Downloads/ipcam/all/" + token + "");
 		}
 
         // load URL
@@ -241,13 +241,13 @@ class rtspTask implements Callable<String> {
 		user = "admin";
 		pw = "admin";
 		req = "2";
-		file = "~/Downloads/ipcam/all/"+token+"/"+ip+".jpeg";
+		file = "/home/frank/Downloads/ipcam/all/"+token+"/"+ip+".jpeg";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
 
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
-			+"~/Downloads/ipcam/all/"+ip+".jpeg 2>&1";
+			+"/home/frank/Downloads/ipcam/all/"+ip+".jpeg 2>&1";
 
 		result = captureCmd(link, file);
 
