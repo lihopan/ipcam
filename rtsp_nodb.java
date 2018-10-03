@@ -40,8 +40,10 @@ public class rtsp_nodb {
 
 	    // Create one directory
 	    if ((new File("~/Downloads/ipcam/all/" + token)).mkdir()) {
-	      System.out.println("Directory: ~/Download/all/" + token + " created");
-	    }
+	      System.out.println("Directory: ~/Downloads/all/" + token + " created");
+	    } else {
+			System.out.println("Fail to create directory: ~/Downloads/all/" + token + "");
+		}
 
         // load URL
         try {
@@ -195,7 +197,9 @@ public class rtsp_nodb {
 			"1.32.128.0",
 			"1.32.192.0",
 			"8.128.0.0",
-			"8.208.0.0"
+			"8.208.0.0",
+			"14.1.28.0",
+			"14.1.112.0"
 		};
 
 		for( String blackList : blackListArray) {
