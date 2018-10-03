@@ -71,7 +71,12 @@ public class rtsp_nodb {
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
-				System.out.println(startAddr + " " + endAddr);
+				int successCount = 0;
+
+				// skip this addr if in black list
+				if( inBlackList(startAddr) ) {
+					continue;
+				}
 
 				// Convert from an IPv4 address to an integer
 				startInt = ipToLong(startAddr);
@@ -105,6 +110,17 @@ public class rtsp_nodb {
 							} else {
 								if(futures[i].isDone()) {
 
+									//Get thread output, link,result
+									output = (String)futures[i].get();
+									output_ip = output.substring(0,output.indexOf('~'));
+									output = output.substring(output.indexOf('~')+1);
+									output_link = output.substring(0,output.indexOf('~'));
+									output_result = output.substring(output.indexOf('~')+1);
+
+									if(output_result.indexOf("Success") > -1) {
+										successCount = successCount + 1;
+									}
+
 									futures[i] = executor.submit(new rtspTask(ip,token));
 
 									busy = false;
@@ -122,6 +138,8 @@ public class rtsp_nodb {
 					}
 
 				}
+
+				System.out.println(startAddr + " " + endAddr + " " + String.valueOf(successCount));
 
 			}
         } catch (Exception e) {
@@ -169,6 +187,27 @@ public class rtsp_nodb {
 		}
 
 		return result.toString();
+	}
+
+	public static Boolean inBlackList(String ip) {
+
+		String[] blackListArray = {
+			"1.32.128.0",
+			"1.32.192.0",
+			"8.128.0.0",
+			"8.208.0.0"
+		};
+
+		for( String blackList : blackListArray) {
+
+			if( blackList.equals(ip) ) {
+				return true;
+			}
+
+		}
+
+		return false;
+
 	}
 
 }
