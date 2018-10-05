@@ -13,14 +13,12 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FilenameFilter;
 
-public class rtsp_nodb {
-
-	public static List<String> blackListArray;
+public class rtsp_kr_nodb {
 
 	public static void main(String[] args) {
 
         // create thread pool
-        Integer threadSize = 80;
+        Integer threadSize = 40;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -41,15 +39,15 @@ public class rtsp_nodb {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("/home/frank/Downloads/ipcam/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /home/frank/Downloads/ipcam/all/" + token + " created");
+	    if ((new File("/home/frank/Downloads/ipcam/kr/" + token)).mkdir()) {
+	      System.out.println("Directory: /home/frank/Downloads/ipcam/kr/" + token + " created");
 	    } else {
-			System.out.println("Fail to create directory: /home/frank/Downloads/ipcam/all/" + token + "");
+			System.out.println("Fail to create directory: /home/frank/Downloads/ipcam/kr/" + token + "");
 		}
 
         // load URL
         try {
-	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=SINGAPORE%2CHONG+KONG%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
+	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=KOREA+REPUBLIC+OF%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
 			URLConnection spoof = url.openConnection();
 
 			// spoof the connection so we look like a web browser
@@ -193,15 +191,16 @@ public class rtsp_nodb {
 		return result.toString();
 	}
 
-	public static void loadBlackList() {
-	
-			
-
-		
-
-	}
-
 	public static Boolean inBlackList(String ip) {
+
+		String[] blackListArray = {
+			"1.32.128.0",
+			"1.32.192.0",
+			"8.128.0.0",
+			"8.208.0.0",
+			"14.1.28.0",
+			"14.1.112.0"
+		};
 
 		for( String blackList : blackListArray) {
 
@@ -214,8 +213,6 @@ public class rtsp_nodb {
 		return false;
 
 	}
-
-	
 
 }
 
@@ -244,13 +241,13 @@ class rtspTask implements Callable<String> {
 		user = "admin";
 		pw = "admin";
 		req = "2";
-		file = "/home/frank/Downloads/ipcam/all/"+token+"/"+ip+".jpeg";
+		file = "/home/frank/Downloads/ipcam/kr/"+token+"/"+ip+".jpeg";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
 
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
-			+"/home/frank/Downloads/ipcam/all/"+ip+".jpeg 2>&1";
+			+"/home/frank/Downloads/ipcam/kr/"+ip+".jpeg 2>&1";
 
 		result = captureCmd(link, file);
 
@@ -276,7 +273,7 @@ class rtspTask implements Callable<String> {
 
 	public String captureCmd(String link, String file) throws Exception {
 
-		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","copy","-vframes","1","-y",file).redirectErrorStream(true).start();
+		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","-c:v","copy","-c:a","copy","-vframes","1","-y",file).redirectErrorStream(true).start();
 		StringBuilder strBuild = new StringBuilder();
 		try (BufferedReader processOutputReader = new BufferedReader(new InputStreamReader(processDuration.getInputStream(), Charset.defaultCharset()));) {
 		    String line;
