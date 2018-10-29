@@ -1,4 +1,6 @@
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,16 +11,22 @@ import java.net.URLConnection;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FilenameFilter;
 
 public class rtsp_kr_nodb {
 
+	public static List<String> blackListArray = new ArrayList<String>();
+
 	public static void main(String[] args) {
 
-        // create thread pool
-        Integer threadSize = 40;
+		// load blacklist
+		loadBlackList();
+
+	        // create thread pool
+        	Integer threadSize = 80;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -38,10 +46,10 @@ public class rtsp_kr_nodb {
 		tokenFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 		token = tokenFormat.format(tokenDate);
 
-	    // Create one directory
-	    if ((new File("/home/frank/Downloads/ipcam/kr/" + token)).mkdir()) {
-	      System.out.println("Directory: /home/frank/Downloads/ipcam/kr/" + token + " created");
-	    } else {
+		// Create one directory
+		if ((new File("/home/frank/Downloads/ipcam/kr/" + token)).mkdir()) {
+	      		System.out.println("Directory: /home/frank/Downloads/ipcam/kr/" + token + " created");
+	    	} else {
 			System.out.println("Fail to create directory: /home/frank/Downloads/ipcam/kr/" + token + "");
 		}
 
@@ -191,16 +199,37 @@ public class rtsp_kr_nodb {
 		return result.toString();
 	}
 
-	public static Boolean inBlackList(String ip) {
+	public static void loadBlackList() {
+	
+		
+		try{	
 
-		String[] blackListArray = {
-			"1.32.128.0",
-			"1.32.192.0",
-			"8.128.0.0",
-			"8.208.0.0",
-			"14.1.28.0",
-			"14.1.112.0"
-		};
+		File file = new File("/home/frank/ipcam/rtsp_kr_nodb.list"	);
+
+		BufferedReader br = new BufferedReader(new FileReader(file));
+
+		String st;
+
+		while((st = br.readLine()) != null) {
+			String[] parts = st.split(" ");
+
+			if((parts.length == 3) && (parts[2].equals("0"))) {
+				blackListArray.add(parts[0]);
+			
+			}
+
+
+		}
+		} catch(Exception e) {
+
+			System.out.println(e);
+
+		}
+	
+
+	}
+
+	public static Boolean inBlackList(String ip) {
 
 		for( String blackList : blackListArray) {
 
@@ -213,6 +242,8 @@ public class rtsp_kr_nodb {
 		return false;
 
 	}
+
+	
 
 }
 
@@ -273,7 +304,7 @@ class rtspTask implements Callable<String> {
 
 	public String captureCmd(String link, String file) throws Exception {
 
-		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","-c:v","copy","-c:a","copy","-vframes","1","-y",file).redirectErrorStream(true).start();
+		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","copy","-vframes","1","-y",file).redirectErrorStream(true).start();
 		StringBuilder strBuild = new StringBuilder();
 		try (BufferedReader processOutputReader = new BufferedReader(new InputStreamReader(processDuration.getInputStream(), Charset.defaultCharset()));) {
 		    String line;

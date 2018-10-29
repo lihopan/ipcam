@@ -1,4 +1,6 @@
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -9,18 +11,22 @@ import java.net.URLConnection;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
 import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FilenameFilter;
 
 public class rtsp_nodb {
 
-	public static List<String> blackListArray;
+	public static List<String> blackListArray = new ArrayList<String>();
 
 	public static void main(String[] args) {
 
-        // create thread pool
-        Integer threadSize = 80;
+		// load blacklist
+		loadBlackList();
+
+	        // create thread pool
+        	Integer threadSize = 80;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -40,10 +46,10 @@ public class rtsp_nodb {
 		tokenFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 		token = tokenFormat.format(tokenDate);
 
-	    // Create one directory
-	    if ((new File("/home/frank/Downloads/ipcam/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /home/frank/Downloads/ipcam/all/" + token + " created");
-	    } else {
+		// Create one directory
+		if ((new File("/home/frank/Downloads/ipcam/all/" + token)).mkdir()) {
+	      		System.out.println("Directory: /home/frank/Downloads/ipcam/all/" + token + " created");
+	    	} else {
 			System.out.println("Fail to create directory: /home/frank/Downloads/ipcam/all/" + token + "");
 		}
 
@@ -195,9 +201,31 @@ public class rtsp_nodb {
 
 	public static void loadBlackList() {
 	
-			
-
 		
+		try{	
+
+		File file = new File("/home/frank/ipcam/rtsp_nodb.list"	);
+
+		BufferedReader br = new BufferedReader(new FileReader(file));
+
+		String st;
+
+		while((st = br.readLine()) != null) {
+			String[] parts = st.split(" ");
+
+			if((parts.length == 3) && (parts[2].equals("0"))) {
+				blackListArray.add(parts[0]);
+			
+			}
+
+
+		}
+		} catch(Exception e) {
+
+			System.out.println(e);
+
+		}
+	
 
 	}
 
