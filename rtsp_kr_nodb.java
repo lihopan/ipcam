@@ -1,4 +1,6 @@
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,11 +13,18 @@ import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
+
 
 public class rtsp_kr_nodb {
 
+	public static List<String> blackListArray;
+
 	public static void main(String[] args) {
+
+		// load backlist on file
+		loadBlackList();
 
         // create thread pool
         Integer threadSize = 40;
@@ -191,16 +200,34 @@ public class rtsp_kr_nodb {
 		return result.toString();
 	}
 
-	public static Boolean inBlackList(String ip) {
+	public static void loadBlackList() {
 
-		String[] blackListArray = {
-			"1.32.128.0",
-			"1.32.192.0",
-			"8.128.0.0",
-			"8.208.0.0",
-			"14.1.28.0",
-			"14.1.112.0"
-		};
+		blackListArray = new ArrayList<String>();
+
+		File file = new File("rtsp_nodb.list");
+
+		try {
+
+			BufferedReader br = new BufferedReader(new FileReader(file));
+
+			String line;
+			while((line = br.readLine()) != null) {
+
+				String[] line_array = line.split(" ");
+
+				if( line_array[2].equals("0") ) {
+					blackListArray.add(line_array[0]);
+				}
+
+			}
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+	}
+
+	public static Boolean inBlackList(String ip) {
 
 		for( String blackList : blackListArray) {
 
@@ -213,7 +240,6 @@ public class rtsp_kr_nodb {
 		return false;
 
 	}
-
 }
 
 class rtspTask implements Callable<String> {

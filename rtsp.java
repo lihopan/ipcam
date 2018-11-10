@@ -24,8 +24,11 @@ public class rtsp {
 
 	public static void main(String[] args) {
 
+		// load backlist on file
+		loadBlackList();
+
 		// connect to the local database server
-		MongoClient mongoClient = new MongoClient();		
+		MongoClient mongoClient = new MongoClient();
 
 		// get handle to "ipcam" database
 		MongoDatabase database = mongoClient.getDatabase("ipcam");
@@ -41,7 +44,7 @@ public class rtsp {
 		Future[] futures = new Future[threadSize];
 
 		// token variable
-		Date tokenDate; 
+		Date tokenDate;
 		SimpleDateFormat tokenFormat;
 		String token;
 
@@ -56,7 +59,7 @@ public class rtsp {
 	    // Create one directory
 	    if ((new File("/var/www/html/ipcam/pic/all/" + token)).mkdir()) {
 	      System.out.println("Directory: /var/www/html/ipcam/pic/all/" + token + " created");
-	    }   
+	    }
 
         // load URL
         try {
@@ -86,7 +89,12 @@ public class rtsp {
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
-				System.out.println(startAddr + " " + endAddr);
+				int successCount = 0;
+
+				// skip this addr if in black list
+				if( inBlackList(startAddr) ) {
+					continue;
+				}
 
 				// Convert from an IPv4 address to an integer
 				startInt = ipToLong(startAddr);
@@ -104,9 +112,9 @@ public class rtsp {
 
 					//Find free thread
 					while(busy) {
-					
+
 						for(int i = 1; i < threadSize; i++) {
-						
+
 							if(futures[i] == null) {
 
 								//System.out.println("Free Thread : " + i);
@@ -129,22 +137,22 @@ public class rtsp {
 									output_link = output.substring(0,output.indexOf('~'));
 									output_result = output.substring(output.indexOf('~')+1);
 
-									//Find and update Database			
-									if(output_result.indexOf("Success") > -1) {					
-										System.out.println(output_result);
+									//Find and update Database
+									if(output_result.indexOf("Success") > -1) {
+										successCount = successCount + 1;
 										Date now = new Date();
-										SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");								
+										SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 										Document doc = new Document("$set", new Document("ip",ipToLong(output_ip))
 													.append("link",output_link)
 													.append("capture_timestamp",sdFormat.format(now))
 													.append("capture_result",output_result)
 													.append("token",token));
-	
+
 										try{
 											collection.updateOne(eq("ip",ipToLong(output_ip)),doc,new UpdateOptions().upsert(true));
 										} catch (Exception e) {
-											System.err.println("Caught Exception: " + e.getMessage());							
-										}										
+											System.err.println("Caught Exception: " + e.getMessage());
+										}
 									}
 
 
@@ -164,9 +172,11 @@ public class rtsp {
 
 					}
 
-				} 	
+				}
 
-			}        	
+				System.out.println(startAddr + " " + endAddr + " " + String.valueOf(successCount));
+
+			}
         } catch (Exception e) {
         	System.out.println(e.getMessage());
         }
@@ -198,7 +208,7 @@ public class rtsp {
 		}
 
 		return result;
-	}	
+	}
 
 	public static String longToIp(long ip) {
 
@@ -216,11 +226,52 @@ public class rtsp {
 		}
 
 		return result.toString();
-	}	
+	}
+
+	public static void loadBlackList() {
+
+		blackListArray = new ArrayList<String>();
+
+		File file = new File("rtsp.list");
+
+		try {
+
+			BufferedReader br = new BufferedReader(new FileReader(file));
+
+			String line;
+			while((line = br.readLine()) != null) {
+
+				String[] line_array = line.split(" ");
+
+				if( line_array[2].equals("0") ) {
+					blackListArray.add(line_array[0]);
+				}
+
+			}
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+	}
+
+	public static Boolean inBlackList(String ip) {
+
+		for( String blackList : blackListArray) {
+
+			if( blackList.equals(ip) ) {
+				return true;
+			}
+
+		}
+
+		return false;
+
+	}
 
 	public static void housekeepFolder(String token) {
 
-		File file = new File("/var/www/html/ipcam/pic/all");
+		File file = new File("/var/www/ipcam/pic/all");
 		String[] directories = file.list(new FilenameFilter() {
 		  @Override
 		  public boolean accept(File current, String name) {
@@ -235,7 +286,7 @@ public class rtsp {
 				if (deleteFolder(dir)) {
 					System.out.println(directories[i] + " directory is deleted.");
 				} else {
-					System.out.println(directories[i] + " " + token + " directory delete fail.");					
+					System.out.println(directories[i] + " " + token + " directory delete fail.");
 				}
 			}
 		}
@@ -264,10 +315,10 @@ class rtspTask implements Callable<String> {
 
 	public rtspTask (String ip, String token) {
 
-		this.ip = ip;	
+		this.ip = ip;
 		this.token = token;
 
-	}		
+	}
 
 	@Override
 	public String call() throws Exception{
@@ -284,7 +335,7 @@ class rtspTask implements Callable<String> {
 		req = "2";
 		file = "/var/www/html/ipcam/pic/all/"+token+"/"+ip+".jpeg";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
-		
+
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
@@ -322,20 +373,20 @@ class rtspTask implements Callable<String> {
 		        strBuild.append(line + System.lineSeparator());
 		    }
 		    processDuration.waitFor();
-		}		
+		}
 
 		return checkResult(strBuild.toString());
 	}
 
 	public String checkResult(String output) {
 		String result = "";
-		
+
 		if(output.indexOf("Connection timed out") > -1) {
-			result = "Connection timeout";		//Host offline	
+			result = "Connection timeout";		//Host offline
 		} else if(output.indexOf("Connection refused") > -1) {
 			result = "Connection refused";		//Host online but no RSTP
 		} else if(output.indexOf("400 Bad Request") > -1) {
-			result = "400 Bad Request";			//RTSP ok but bad request	
+			result = "400 Bad Request";			//RTSP ok but bad request
 		} else if(output.indexOf("401 Unauthorized") > -1) {
 			result = "401 Unauthorized";			//RTSP & request ok but incorrect password
 		} else if(output.indexOf("Invalid data found") > -1) {
@@ -343,7 +394,7 @@ class rtspTask implements Callable<String> {
 		} else if(output.indexOf("Output #0, image2, to") > -1) {
 			result = "Success"; 					//Connect success
 		}
-		
+
 		return result;
 	}
 

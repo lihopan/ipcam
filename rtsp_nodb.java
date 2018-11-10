@@ -1,4 +1,6 @@
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,6 +13,7 @@ import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 
 public class rtsp_nodb {
@@ -18,6 +21,9 @@ public class rtsp_nodb {
 	public static List<String> blackListArray;
 
 	public static void main(String[] args) {
+
+		// load backlist on file
+		loadBlackList();
 
         // create thread pool
         Integer threadSize = 80;
@@ -194,10 +200,29 @@ public class rtsp_nodb {
 	}
 
 	public static void loadBlackList() {
-	
-			
 
-		
+		blackListArray = new ArrayList<String>();
+
+		File file = new File("rtsp_nodb.list");
+
+		try {
+
+			BufferedReader br = new BufferedReader(new FileReader(file));
+
+			String line;
+			while((line = br.readLine()) != null) {
+
+				String[] line_array = line.split(" ");
+
+				if( line_array[2].equals("0") ) {
+					blackListArray.add(line_array[0]);
+				}
+
+			}
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
 
 	}
 
@@ -215,7 +240,7 @@ public class rtsp_nodb {
 
 	}
 
-	
+
 
 }
 
