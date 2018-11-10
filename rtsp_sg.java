@@ -33,8 +33,8 @@ public class rtsp_sg {
 		// get a handle to the "capture_lsit" collection
 		MongoCollection<Document> collection = database.getCollection("capture_list_sg");
 
-        // create thread pool
-        Integer threadSize = 20;
+        	// create thread pool
+	        Integer threadSize = 40;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -54,13 +54,13 @@ public class rtsp_sg {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("/var/www/html/ipcam/pic/sg/" + token)).mkdir()) {
-	      System.out.println("Directory: /var/www/html/ipcam/pic/sg/" + token + " created");
+	    if ((new File("/var/www/ipcam/pic/sg/" + token)).mkdir()) {
+	      System.out.println("Directory: /var/www/ipcam/pic/sg/" + token + " created");
 	    }   
 
         // load URL
         try {
-	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=SINGAPORE&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
+	        URL url = new URL("http://services.ce3c.be/ciprg/?countrys=KOREA+REPUBLIC+OF%2C&format=by+input&format2=%7Bstartip%7D%2C%7Bendip%7D%0D%0A");
 			URLConnection spoof = url.openConnection();
 
 			// spoof the connection so we look like a web browser
@@ -86,7 +86,7 @@ public class rtsp_sg {
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
-				//System.out.println(startAddr + " " + endAddr);
+				System.out.println(startAddr + " " + endAddr);
 
 				// Convert from an IPv4 address to an integer
 				startInt = ipToLong(startAddr);
@@ -220,7 +220,7 @@ public class rtsp_sg {
 
 	public static void housekeepFolder(String token) {
 
-		File file = new File("/var/www/html/ipcam/pic/sg");
+		File file = new File("/var/www/ipcam/pic/sg");
 		String[] directories = file.list(new FilenameFilter() {
 		  @Override
 		  public boolean accept(File current, String name) {
@@ -231,7 +231,7 @@ public class rtsp_sg {
 		File dir;
 		for(int i = 0; i < directories.length; i++) {
 			if(!directories[i].equals(token)) {
-				dir = new File("/var/www/html/ipcam/pic/sg/" + directories[i]);
+				dir = new File("/var/www/ipcam/pic/sg/" + directories[i]);
 				if (deleteFolder(dir)) {
 					System.out.println(directories[i] + " directory is deleted.");
 				} else {
@@ -280,19 +280,19 @@ class rtspTask implements Callable<String> {
 		rtspCmd = "";
 		user = "admin";
 		pw = "admin";
-		req = "11";
-		file = "/var/www/html/ipcam/pic/sg/"+token+"/"+ip+".jpeg";
+		req = "2";
+		file = "/var/www/ipcam/pic/sg/"+token+"/"+ip+".jpeg";
 
 		//ip = "183.179.242.225";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
 			+"-f image2 -vframes 1 -y "
-			+"/var/www/html/ipcam/pic/sg/"+ip+".jpeg 2>&1";
+			+"/var/www/ipcam/pic/sg/"+ip+".jpeg 2>&1";
 
 		//System.out.println(rtspCmd);
 
-		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","-vframes","1","-y",file).redirectErrorStream(true).start();
+		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-rtsp_transport","tcp","-i",link,"-r","1","-vframes","1",file).redirectErrorStream(true).start();
 		StringBuilder strBuild = new StringBuilder();
 		try (BufferedReader processOutputReader = new BufferedReader(new InputStreamReader(processDuration.getInputStream(), Charset.defaultCharset()));) {
 		    String line;

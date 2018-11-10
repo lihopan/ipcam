@@ -33,8 +33,8 @@ public class rtsp {
 		// get a handle to the "capture_lsit" collection
 		MongoCollection<Document> collection = database.getCollection("capture_list_all");
 
-        // create thread pool
-        Integer threadSize = 80;
+        	// create thread pool
+	        Integer threadSize = 40;
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -47,15 +47,15 @@ public class rtsp {
 
 		Boolean running = true;
 
-		while(running) {
+		//while(running) {
 		// create token
 		tokenDate = new Date();
 		tokenFormat = new SimpleDateFormat("yyyyMMddHHmmss");
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-	    if ((new File("/var/www/html/ipcam/pic/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /var/www/html/ipcam/pic/all/" + token + " created");
+	    if ((new File("/var/www/ipcam/pic/all/" + token)).mkdir()) {
+	      System.out.println("Directory: /var/www/ipcam/pic/all/" + token + " created");
 	    }   
 
         // load URL
@@ -83,6 +83,7 @@ public class rtsp {
 			// loop through every line in the source
 			while ((strLine = in.readLine()) != null){
 
+//strLine = "138.19.159.108,138.19.159.109";
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
@@ -165,7 +166,7 @@ public class rtsp {
 					}
 
 				} 	
-
+//break;
 			}        	
         } catch (Exception e) {
         	System.out.println(e.getMessage());
@@ -178,7 +179,7 @@ public class rtsp {
 		DeleteResult deleteResult = collection.deleteMany(ne("token",token));
 		System.out.println("Deleted documents : " + deleteResult.getDeletedCount());
 
-		}
+		//}
 		executor.shutdown();
 
 
@@ -220,7 +221,7 @@ public class rtsp {
 
 	public static void housekeepFolder(String token) {
 
-		File file = new File("/var/www/html/ipcam/pic/all");
+		File file = new File("/var/www/ipcam/pic/all");
 		String[] directories = file.list(new FilenameFilter() {
 		  @Override
 		  public boolean accept(File current, String name) {
@@ -231,7 +232,7 @@ public class rtsp {
 		File dir;
 		for(int i = 0; i < directories.length; i++) {
 			if(!directories[i].equals(token)) {
-				dir = new File("/var/www/html/ipcam/pic/all/" + directories[i]);
+				dir = new File("/var/www/ipcam/pic/all/" + directories[i]);
 				if (deleteFolder(dir)) {
 					System.out.println(directories[i] + " directory is deleted.");
 				} else {
@@ -282,13 +283,13 @@ class rtspTask implements Callable<String> {
 		user = "admin";
 		pw = "admin";
 		req = "2";
-		file = "/var/www/html/ipcam/pic/all/"+token+"/"+ip+".jpeg";
+		file = "/var/www/ipcam/pic/all/"+token+"/"+ip+".jpeg";
 		link = "rtsp://"+user+":"+pw+"@"+ip+"/"+req;
 		
 		rtspCmd = "ffmpeg -stimeout 1500000 -i "
 			+link+" "
-			+"-f image2 -vframes 1 -y "
-			+"/var/www/html/ipcam/pic/all/"+ip+".jpeg 2>&1";
+			+"-r 1 -vframes 1 "
+			+"/var/www/ipcam/pic/all/"+ip+".jpeg 2>&1";
 
 		result = captureCmd(link, file);
 
@@ -314,7 +315,7 @@ class rtspTask implements Callable<String> {
 
 	public String captureCmd(String link, String file) throws Exception {
 
-		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-i",link,"-f","image2","-vframes","1","-y",file).redirectErrorStream(true).start();
+		Process processDuration = new ProcessBuilder("ffmpeg","-stimeout","2000000","-rtsp_transport","tcp","-i",link,"-r","1","-vframes","1",file).redirectErrorStream(true).start();
 		StringBuilder strBuild = new StringBuilder();
 		try (BufferedReader processOutputReader = new BufferedReader(new InputStreamReader(processDuration.getInputStream(), Charset.defaultCharset()));) {
 		    String line;
@@ -329,7 +330,7 @@ class rtspTask implements Callable<String> {
 
 	public String checkResult(String output) {
 		String result = "";
-		
+//System.out.println(output);		
 		if(output.indexOf("Connection timed out") > -1) {
 			result = "Connection timeout";		//Host offline	
 		} else if(output.indexOf("Connection refused") > -1) {
