@@ -5,6 +5,8 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,15 +19,21 @@ import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import static com.mongodb.client.model.Filters.*;
 
 public class rtsp_sg {
 
+	public static List<String> blackListArray = new ArrayList<String>();
+
 	public static void main(String[] args) {
 
+		// load blacklist
+		loadBlackList();
+
 		// connect to the local database server
-		MongoClient mongoClient = new MongoClient();		
+		MongoClient mongoClient = new MongoClient();
 
 		// get handle to "ipcam" database
 		MongoDatabase database = mongoClient.getDatabase("ipcam");
@@ -41,7 +49,7 @@ public class rtsp_sg {
 		Future[] futures = new Future[threadSize];
 
 		// token variable
-		Date tokenDate; 
+		Date tokenDate;
 		SimpleDateFormat tokenFormat;
 		String token;
 
@@ -56,7 +64,7 @@ public class rtsp_sg {
 	    // Create one directory
 	    if ((new File("/var/www/ipcam/pic/sg/" + token)).mkdir()) {
 	      System.out.println("Directory: /var/www/ipcam/pic/sg/" + token + " created");
-	    }   
+	    }
 
         // load URL
         try {
@@ -86,7 +94,7 @@ public class rtsp_sg {
 				startAddr = strLine.substring(0,strLine.indexOf(','));
 				endAddr = strLine.substring(strLine.indexOf(',')+1);
 
-				System.out.println(startAddr + " " + endAddr);
+				int successCount = 0;
 
 				// Convert from an IPv4 address to an integer
 				startInt = ipToLong(startAddr);
@@ -104,9 +112,9 @@ public class rtsp_sg {
 
 					//Find free thread
 					while(busy) {
-					
+
 						for(int i = 1; i < threadSize; i++) {
-						
+
 							if(futures[i] == null) {
 
 								//System.out.println("Free Thread : " + i);
@@ -129,22 +137,23 @@ public class rtsp_sg {
 									output_link = output.substring(0,output.indexOf('~'));
 									output_result = output.substring(output.indexOf('~')+1);
 
-									//Find and update Database			
-									if(output_result.indexOf("Success") > -1) {					
+									//Find and update Database
+									if(output_result.indexOf("Success") > -1) {
+										successCount = successCount + 1;
 										System.out.println(output_result);
 										Date now = new Date();
-										SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");								
+										SimpleDateFormat sdFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 										Document doc = new Document("$set", new Document("ip",ipToLong(output_ip))
 													.append("link",output_link)
 													.append("capture_timestamp",sdFormat.format(now))
 													.append("capture_result",output_result)
 													.append("token",token));
-	
+
 										try{
 											collection.updateOne(eq("ip",ipToLong(output_ip)),doc,new UpdateOptions().upsert(true));
 										} catch (Exception e) {
-											System.err.println("Caught Exception: " + e.getMessage());							
-										}										
+											System.err.println("Caught Exception: " + e.getMessage());
+										}
 									}
 
 
@@ -164,9 +173,11 @@ public class rtsp_sg {
 
 					}
 
-				} 	
+				}
 
-			}        	
+				System.out.println(startAddr + " " + endAddr + " " + String.valueOf(successCount));
+
+			}
         } catch (Exception e) {
         	System.out.println(e.getMessage());
         }
@@ -198,7 +209,7 @@ public class rtsp_sg {
 		}
 
 		return result;
-	}	
+	}
 
 	public static String longToIp(long ip) {
 
@@ -216,8 +227,47 @@ public class rtsp_sg {
 		}
 
 		return result.toString();
-	}	
+	}
+	public static void loadBlackList() {
 
+		blackListArray = new ArrayList<String>();
+
+		File file = new File("rtsp_nodb.list");
+
+		try {
+
+			BufferedReader br = new BufferedReader(new FileReader(file));
+
+			String line;
+			while((line = br.readLine()) != null) {
+
+				String[] line_array = line.split(" ");
+
+				if( line_array[2].equals("0") ) {
+					blackListArray.add(line_array[0]);
+				}
+
+			}
+
+		} catch(Exception e) {
+			System.out.println(e.getMessage());
+		}
+
+	}
+
+	public static Boolean inBlackList(String ip) {
+
+		for( String blackList : blackListArray) {
+
+			if( blackList.equals(ip) ) {
+				return true;
+			}
+
+		}
+
+		return false;
+
+	}
 	public static void housekeepFolder(String token) {
 
 		File file = new File("/var/www/ipcam/pic/sg");
@@ -235,7 +285,7 @@ public class rtsp_sg {
 				if (deleteFolder(dir)) {
 					System.out.println(directories[i] + " directory is deleted.");
 				} else {
-					System.out.println(directories[i] + " " + token + " directory delete fail.");					
+					System.out.println(directories[i] + " " + token + " directory delete fail.");
 				}
 			}
 		}
@@ -264,10 +314,10 @@ class rtspTask implements Callable<String> {
 
 	public rtspTask (String ip, String token) {
 
-		this.ip = ip;	
+		this.ip = ip;
 		this.token = token;
 
-	}		
+	}
 
 	@Override
 	public String call() throws Exception{
@@ -309,11 +359,11 @@ class rtspTask implements Callable<String> {
 		String result = "";
 		//System.out.println(output);
 		if(output.indexOf("Connection timed out") > -1) {
-			result = "Connection timeout";		//Host offline	
+			result = "Connection timeout";		//Host offline
 		} else if(output.indexOf("Connection refused") > -1) {
 			result = "Connection refused";		//Host online but no RSTP
 		} else if(output.indexOf("400 Bad Request") > -1) {
-			result = "400 Bad Request";			//RTSP ok but bad request	
+			result = "400 Bad Request";			//RTSP ok but bad request
 		} else if(output.indexOf("401 Unauthorized") > -1) {
 			result = "401 Unauthorized";			//RTSP & request ok but incorrect password
 		} else if(output.indexOf("Invalid data found") > -1) {
