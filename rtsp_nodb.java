@@ -23,19 +23,11 @@ public class rtsp_nodb {
 
 	public static void main(String[] args) {
 
-<<<<<<< HEAD
 		// load backlist on file
 		loadBlackList();
 
         // create thread pool
         Integer threadSize = 80;
-=======
-		// load blacklist
-		loadBlackList();
-
-	        // create thread pool
-        	Integer threadSize = 80;
->>>>>>> 04a0acce0c6071584afae87b96cb9c99ca30525f
 		ExecutorService executor = Executors.newFixedThreadPool(threadSize);
 
 		// create result list
@@ -209,7 +201,6 @@ public class rtsp_nodb {
 	}
 
 	public static void loadBlackList() {
-<<<<<<< HEAD
 
 		blackListArray = new ArrayList<String>();
 
@@ -233,34 +224,6 @@ public class rtsp_nodb {
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
 		}
-=======
-	
-		
-		try{	
-
-		File file = new File("/home/frank/ipcam/rtsp_nodb.list"	);
-
-		BufferedReader br = new BufferedReader(new FileReader(file));
-
-		String st;
-
-		while((st = br.readLine()) != null) {
-			String[] parts = st.split(" ");
-
-			if((parts.length == 3) && (parts[2].equals("0"))) {
-				blackListArray.add(parts[0]);
-			
-			}
-
-
-		}
-		} catch(Exception e) {
-
-			System.out.println(e);
-
-		}
-	
->>>>>>> 04a0acce0c6071584afae87b96cb9c99ca30525f
 
 	}
 

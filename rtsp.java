@@ -57,15 +57,9 @@ public class rtsp {
 		token = tokenFormat.format(tokenDate);
 
 	    // Create one directory
-<<<<<<< HEAD
-	    if ((new File("/var/www/html/ipcam/pic/all/" + token)).mkdir()) {
-	      System.out.println("Directory: /var/www/html/ipcam/pic/all/" + token + " created");
-	    }
-=======
 	    if ((new File("/var/www/ipcam/pic/all/" + token)).mkdir()) {
 	      System.out.println("Directory: /var/www/ipcam/pic/all/" + token + " created");
 	    }   
->>>>>>> 04a0acce0c6071584afae87b96cb9c99ca30525f
 
         // load URL
         try {
@@ -179,17 +173,11 @@ public class rtsp {
 
 					}
 
-<<<<<<< HEAD
 				}
 
 				System.out.println(startAddr + " " + endAddr + " " + String.valueOf(successCount));
 
 			}
-=======
-				} 	
-//break;
-			}        	
->>>>>>> 04a0acce0c6071584afae87b96cb9c99ca30525f
         } catch (Exception e) {
         	System.out.println(e.getMessage());
         }
@@ -393,11 +381,6 @@ class rtspTask implements Callable<String> {
 
 	public String checkResult(String output) {
 		String result = "";
-<<<<<<< HEAD
-
-=======
-//System.out.println(output);		
->>>>>>> 04a0acce0c6071584afae87b96cb9c99ca30525f
 		if(output.indexOf("Connection timed out") > -1) {
 			result = "Connection timeout";		//Host offline
 		} else if(output.indexOf("Connection refused") > -1) {
