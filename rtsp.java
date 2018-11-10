@@ -5,6 +5,8 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import org.bson.Document;
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,10 +19,13 @@ import java.nio.charset.Charset;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import static com.mongodb.client.model.Filters.*;
 
 public class rtsp {
+
+	public static List<String> blackListArray = new ArrayList<String>();
 
 	public static void main(String[] args) {
 
@@ -59,7 +64,7 @@ public class rtsp {
 	    // Create one directory
 	    if ((new File("/var/www/ipcam/pic/all/" + token)).mkdir()) {
 	      System.out.println("Directory: /var/www/ipcam/pic/all/" + token + " created");
-	    }   
+	    }
 
         // load URL
         try {
